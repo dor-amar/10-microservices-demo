@@ -337,4 +337,3 @@ Each service has a Dockerfile in `src/[service-name]/Dockerfile`
 - **HTTP/REST** for frontend
 - **Redis** for cart data storage
 
-**Ready to build a scalable, distributed microservices application? Let's go!** 🚀
