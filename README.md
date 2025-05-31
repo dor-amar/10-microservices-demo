@@ -8,9 +8,8 @@ web-based e-commerce app where users can browse items, add them to the cart, and
 
 Google uses this application to demonstrate how developers can modernize enterprise applications using Google Cloud products, including: [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine), [Cloud Service Mesh (CSM)](https://cloud.google.com/service-mesh), [gRPC](https://grpc.io/), [Cloud Operations](https://cloud.google.com/products/operations), [Spanner](https://cloud.google.com/spanner), [Memorystore](https://cloud.google.com/memorystore), [AlloyDB](https://cloud.google.com/alloydb), and [Gemini](https://ai.google.dev/). This application works on any Kubernetes cluster.
 
-If you’re using this demo, please **★Star** this repository to show your interest!
+If you're using this demo, please **★Star** this repository to show your interest!
 
-**Note to Googlers:** Please fill out the form at [go/microservices-demo](http://go/microservices-demo).
 
 ## Architecture
 
@@ -42,125 +41,300 @@ Find **Protocol Buffers Descriptions** at the [`./protos` directory](/protos).
 | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | [![Screenshot of store homepage](/docs/img/online-boutique-frontend-1.png)](/docs/img/online-boutique-frontend-1.png) | [![Screenshot of checkout screen](/docs/img/online-boutique-frontend-2.png)](/docs/img/online-boutique-frontend-2.png) |
 
-## Quickstart (GKE)
 
-1. Ensure you have the following requirements:
-   - [Google Cloud project](https://cloud.google.com/resource-manager/docs/creating-managing-projects#creating_a_project).
-   - Shell environment with `gcloud`, `git`, and `kubectl`.
+# 🏪 Online Boutique - Microservices Deployment Project
 
-2. Clone the latest major version.
+## 📋 Project Overview
 
-   ```sh
-   git clone --depth 1 --branch v0 https://github.com/GoogleCloudPlatform/microservices-demo.git
-   cd microservices-demo/
-   ```
+Welcome to your **Microservices Deployment Project**! You will deploy Google's Online Boutique - a cloud-native microservices demo application across **3 EC2 instances** with load balancing and scaling capabilities.
 
-   The `--depth 1` argument skips downloading git history.
+Your mission is to demonstrate mastery of distributed systems, containerization, and load balancing by deploying this 11-service application across multiple instances.
 
-3. Set the Google Cloud project and region and ensure the Google Kubernetes Engine API is enabled.
+## Learning Objectives
 
-   ```sh
-   export PROJECT_ID=<PROJECT_ID>
-   export REGION=us-central1
-   gcloud services enable container.googleapis.com \
-     --project=${PROJECT_ID}
-   ```
+By completing this project, you will master:
 
-   Substitute `<PROJECT_ID>` with the ID of your Google Cloud project.
+- **Distributed Deployment**: Deploying microservices across multiple instances
+- **Container Orchestration**: Using Docker to manage complex applications
+- **Load Balancing**: Implementing Nginx for traffic distribution and high availability
+- **Scaling**: Horizontal scaling of microservices
+- **Service Discovery**: Managing communication between distributed services
+- **Infrastructure Management**: AWS EC2, networking, and security configuration
 
-4. Create a GKE cluster and get the credentials for it.
+## 🏗️ Application Architecture
 
-   ```sh
-   gcloud container clusters create-auto online-boutique \
-     --project=${PROJECT_ID} --region=${REGION}
-   ```
+The Online Boutique consists of **11 microservices** that you'll deploy across **3 EC2 instances**:
 
-   Creating the cluster may take a few minutes.
+```
+                    ┌─────────────────┐
+                    │   Instance 3    │
+                    │ Load Balancer   │
+                    │    (Nginx)      │
+                    └─────────┬───────┘
+                              │
+                    ┌─────────▼───────┐
+                    │   Load Balance  │
+                    │    Traffic      │
+                    └─────┬─────┬─────┘
+                          │     │
+              ┌───────────▼─┐ ┌─▼───────────┐
+              │ Instance 1  │ │ Instance 2  │
+              │Application  │ │Application  │
+              │ Services    │ │ Services    │
+              └─────────────┘ └─────────────┘
+```
 
-5. Deploy Online Boutique to the cluster.
+### Service Details
 
-   ```sh
-   kubectl apply -f ./release/kubernetes-manifests.yaml
-   ```
+| Service | Language | Purpose | Port |
+|---------|----------|---------|------|
+| **frontend** | Go | Web UI and user interface | 8080 |
+| **cartservice** | C# | Shopping cart management | 7070 |
+| **productcatalogservice** | Go | Product catalog and search | 3550 |
+| **currencyservice** | Node.js | Currency conversion | 7000 |
+| **paymentservice** | Node.js | Payment processing | 50051 |
+| **shippingservice** | Go | Shipping cost calculation | 50051 |
+| **emailservice** | Python | Order confirmation emails | 8080 |
+| **checkoutservice** | Go | Order orchestration | 5050 |
+| **recommendationservice** | Python | Product recommendations | 8080 |
+| **adservice** | Java | Contextual advertisements | 9555 |
+| **loadgenerator** | Python/Locust | Simulates user traffic | N/A |
 
-6. Wait for the pods to be ready.
+**Important**: Each service has its own **Dockerfile** in the `src/[service-name]/` directory that you can use to build custom images, or you can use the pre-built images.
 
-   ```sh
-   kubectl get pods
-   ```
+## Your Mission
 
-   After a few minutes, you should see the Pods in a `Running` state:
+### Phase 1: Infrastructure Setup
 
-   ```
-   NAME                                     READY   STATUS    RESTARTS   AGE
-   adservice-76bdd69666-ckc5j               1/1     Running   0          2m58s
-   cartservice-66d497c6b7-dp5jr             1/1     Running   0          2m59s
-   checkoutservice-666c784bd6-4jd22         1/1     Running   0          3m1s
-   currencyservice-5d5d496984-4jmd7         1/1     Running   0          2m59s
-   emailservice-667457d9d6-75jcq            1/1     Running   0          3m2s
-   frontend-6b8d69b9fb-wjqdg                1/1     Running   0          3m1s
-   loadgenerator-665b5cd444-gwqdq           1/1     Running   0          3m
-   paymentservice-68596d6dd6-bf6bv          1/1     Running   0          3m
-   productcatalogservice-557d474574-888kr   1/1     Running   0          3m
-   recommendationservice-69c56b74d4-7z8r5   1/1     Running   0          3m1s
-   redis-cart-5f59546cdd-5jnqf              1/1     Running   0          2m58s
-   shippingservice-6ccc89f8fd-v686r         1/1     Running   0          2m58s
-   ```
+**Task 1.1: Launch 3 EC2 Instances**
+- **Instance 1**: Application Server 1
+- **Instance 2**: Application Server 2  
+- **Instance 3**: Nginx Load Balancer
 
-7. Access the web frontend in a browser using the frontend's external IP.
+**Requirements:**
+- Instance type: t3.medium
+- OS: Ubuntu 22.04 LTS
+- Storage: 20 GB minimum
+- Security groups configured
 
-   ```sh
-   kubectl get service frontend-external | awk '{print $4}'
-   ```
+**Task 1.2: Security Group Configuration**
+Configure security groups to allow:
+- **Instance 1 & 2**: Accept traffic from Instance 3 and SSH access
+- **Instance 3**: Accept HTTP/HTTPS from internet, communicate with Instance 1 & 2, SSH access
 
-   Visit `http://EXTERNAL_IP` in a web browser to access your instance of Online Boutique.
+### Phase 2: Application Deployment (Instances 1 & 2)
 
-8. Congrats! You've deployed the default Online Boutique. To deploy a different variation of Online Boutique (e.g., with Google Cloud Operations tracing, Istio, etc.), see [Deploy Online Boutique variations with Kustomize](#deploy-online-boutique-variations-with-kustomize).
+**Task 2.1: Choose Your Deployment Strategy**
+You have flexibility in how you deploy the services:
 
-9. Once you are done with it, delete the GKE cluster.
+**Option A: Docker Compose**
+- Create `docker-compose.yml` files
+- Use pre-built images or build from Dockerfiles
+- Manage services as a stack
 
-   ```sh
-   gcloud container clusters delete online-boutique \
-     --project=${PROJECT_ID} --region=${REGION}
-   ```
+**Option B: Individual Docker Containers**
+- Run each service as separate containers
+- Build images from provided Dockerfiles
+- Manage containers individually
 
-   Deleting the cluster may take a few minutes.
+**Option C: Mixed Approach**
+- Combine both strategies as needed
+- Group related services with Docker Compose
+- Run others individually
 
-## Additional deployment options
+**Task 2.2: Service Distribution**
+Distribute the 11 services across Instance 1 and Instance 2. Consider:
+- **Resource requirements** of each service
+- **Dependencies** between services
+- **Load balancing** requirements
+- **Scaling** potential
 
-- **Terraform**: [See these instructions](/terraform) to learn how to deploy Online Boutique using [Terraform](https://www.terraform.io/intro).
-- **Istio / Cloud Service Mesh**: [See these instructions](/kustomize/components/service-mesh-istio/README.md) to deploy Online Boutique alongside an Istio-backed service mesh.
-- **Non-GKE clusters (Minikube, Kind, etc)**: See the [Development guide](/docs/development-guide.md) to learn how you can deploy Online Boutique on non-GKE clusters.
-- **AI assistant using Gemini**: [See these instructions](/kustomize/components/shopping-assistant/README.md) to deploy a Gemini-powered AI assistant that suggests products to purchase based on an image.
-- **And more**: The [`/kustomize` directory](/kustomize) contains instructions for customizing the deployment of Online Boutique with other variations.
+**Suggested Distribution** :
+- **Instance 1**: Frontend, Checkout, Recommendation, Ad Service, Load Generator
+- **Instance 2**: Product Catalog, Cart, Currency, Payment, Shipping, Email + Redis
 
-## Documentation
+**Task 2.3: Container Management**
+Whether using Docker Compose or individual containers:
+- Configure **environment variables** for service communication
+- Set up **networking** between services
+- Implement **health checks**
+- Configure **resource limits**
+- Set up **persistent storage** where needed (Redis) (Volumes)
 
-- [Development](/docs/development-guide.md) to learn how to run and develop this app locally.
+**Task 2.4: Build or Use Images**
+For each service, decide:
+- **Use pre-built images**: `us-central1-docker.pkg.dev/google-samples/microservices-demo/[service]:v0.10.2`
+- **Build from Dockerfile**: `docker build -t my-[service] src/[service]/`
 
-## Demos featuring Online Boutique
+### Phase 3: Load Balancer Setup (Instance 3)
 
-- [Platform Engineering in action: Deploy the Online Boutique sample apps with Score and Humanitec](https://medium.com/p/d99101001e69)
-- [The new Kubernetes Gateway API with Istio and Anthos Service Mesh (ASM)](https://medium.com/p/9d64c7009cd)
-- [Use Azure Redis Cache with the Online Boutique sample on AKS](https://medium.com/p/981bd98b53f8)
-- [Sail Sharp, 8 tips to optimize and secure your .NET containers for Kubernetes](https://medium.com/p/c68ba253844a)
-- [Deploy multi-region application with Anthos and Google cloud Spanner](https://medium.com/google-cloud/a2ea3493ed0)
-- [Use Google Cloud Memorystore (Redis) with the Online Boutique sample on GKE](https://medium.com/p/82f7879a900d)
-- [Use Helm to simplify the deployment of Online Boutique, with a Service Mesh, GitOps, and more!](https://medium.com/p/246119e46d53)
-- [How to reduce microservices complexity with Apigee and Anthos Service Mesh](https://cloud.google.com/blog/products/application-modernization/api-management-and-service-mesh-go-together)
-- [gRPC health probes with Kubernetes 1.24+](https://medium.com/p/b5bd26253a4c)
-- [Use Google Cloud Spanner with the Online Boutique sample](https://medium.com/p/f7248e077339)
-- [Seamlessly encrypt traffic from any apps in your Mesh to Memorystore (redis)](https://medium.com/google-cloud/64b71969318d)
-- [Strengthen your app's security with Cloud Service Mesh and Anthos Config Management](https://cloud.google.com/service-mesh/docs/strengthen-app-security)
-- [From edge to mesh: Exposing service mesh applications through GKE Ingress](https://cloud.google.com/architecture/exposing-service-mesh-apps-through-gke-ingress)
-- [Take the first step toward SRE with Cloud Operations Sandbox](https://cloud.google.com/blog/products/operations/on-the-road-to-sre-with-cloud-operations-sandbox)
-- [Deploying the Online Boutique sample application on Cloud Service Mesh](https://cloud.google.com/service-mesh/docs/onlineboutique-install-kpt)
-- [Anthos Service Mesh Workshop: Lab Guide](https://codelabs.developers.google.com/codelabs/anthos-service-mesh-workshop)
-- [KubeCon EU 2019 - Reinventing Networking: A Deep Dive into Istio's Multicluster Gateways - Steve Dake, Independent](https://youtu.be/-t2BfT59zJA?t=982)
-- Google Cloud Next'18 SF
-  - [Day 1 Keynote](https://youtu.be/vJ9OaAqfxo4?t=2416) showing GKE On-Prem
-  - [Day 3 Keynote](https://youtu.be/JQPOPV_VH5w?t=815) showing Stackdriver
-    APM (Tracing, Code Search, Profiler, Google Cloud Build)
-  - [Introduction to Service Management with Istio](https://www.youtube.com/watch?v=wCJrdKdD6UM&feature=youtu.be&t=586)
-- [Google Cloud Next'18 London – Keynote](https://youtu.be/nIq2pkNcfEI?t=3071)
-  showing Stackdriver Incident Response Management
+**Task 3.1: Install and Configure Nginx**
+- Install Nginx on Instance 3
+- Configure as a **reverse proxy**
+- Set up **upstream servers** (Instance 1 & 2)
+
+**Task 3.2: Load Balancing Configuration**
+Implement:
+- **Round-robin** or **weighted** load balancing
+- **Health checks** for backend instances
+- **Failover** handling
+- **Session persistence** if needed
+
+**Task 3.3: Advanced Features**
+Configure:
+- **Rate limiting**
+- **SSL termination** (optional)
+- **Caching** for static content
+- **Security headers**
+- **Access logging**
+
+### Phase 4: Scaling and High Availability
+
+**Task 4.1: Horizontal Scaling**
+Demonstrate scaling by:
+- **Adding more instances** of specific services
+- **Load balancing** between multiple instances of the same service
+- **Testing** performance improvements
+
+**Task 4.2: Service Scaling Strategies**
+Implement scaling for:
+- **Frontend services** (multiple frontend containers)
+- **Backend services** (multiple API service instances)
+- **Database scaling** (Redis clustering or replication)
+
+**Task 4.3: Auto-scaling Preparation**
+Design your architecture to support:
+- **Easy addition** of new instances
+- **Dynamic configuration** updates
+- **Monitoring** for scaling decisions
+
+### Phase 5: Testing and Validation
+
+**Task 5.1: Functional Testing**
+- Access application through load balancer
+- Test complete user workflows
+- Verify all services communicate properly
+- Test cross-instance communication
+
+**Task 5.2: Load Testing**
+- Use the built-in **load generator**
+- Perform **Apache Bench** or similar testing
+- Monitor **performance metrics**
+- Test **load distribution**
+
+**Task 5.3: Scaling Validation**
+- **Scale up** services during load testing
+- **Scale down** and verify graceful handling
+- Test **failover** scenarios
+- Measure **performance improvements**
+
+**Task 5.4: Failure Testing**
+- Stop services on one instance
+- Verify load balancer **failover**
+- Test **service recovery**
+- Document **recovery procedures**
+
+
+# You Deliver
+
+### 1. Architecture Documentation
+- **Instance layout** and service distribution
+- **Network diagram** showing load balancing
+- **Scaling strategy** documentation
+
+### 2. Deployment Configuration
+- **Docker configurations** (Compose files or run commands)
+- **Nginx configuration** with load balancing
+- **Environment variables** and service discovery setup
+
+### 3. Scaling Implementation
+- **Horizontal scaling** examples
+- **Load balancing** configuration
+- **Performance testing** results
+
+### 4. Testing Documentation
+- **Load testing** results and analysis
+- **Scaling validation** tests
+- **Failure recovery** procedures
+
+
+## Decisions You'll Make
+
+### Service Distribution
+- Which services go on which instance? Explain why ! 
+- How to handle service dependencies? 
+- Resource allocation strategy?
+
+### Deployment Method
+- Docker Compose vs individual containers?
+- Build custom images or use pre-built?
+- How to manage configuration?
+
+### Load Balancing Strategy
+- Round-robin vs weighted distribution?
+- Health check configuration?
+- Failover handling approach?
+
+### Scaling Approach
+- Which services to scale first?
+- How to handle stateful vs stateless services?
+- Monitoring and metrics strategy?
+
+## Challenges
+
+### Service Discovery
+- Services finding each other across instances
+- Dynamic IP address handling
+- Port management and conflicts
+
+### Load Balancing
+- Proper upstream configuration
+- Health check implementation
+- Session handling for stateful services
+
+### Scaling Complexity
+- Managing multiple instances of same service
+- Database scaling (Redis)
+- Configuration management at scale
+
+### Resource Management
+- Memory and CPU allocation
+- Network bandwidth considerations
+- Storage requirements
+
+## How to Start ? 
+
+1. **Start simple** - Get basic deployment working first
+2. **Test incrementally** - Validate each phase before moving on
+3. **Document decisions** - Explain your architecture choices
+4. **Monitor everything** - Use logs and metrics extensively
+5. **Plan for scale** - Design with scaling in mind from the start
+6. **Test failure scenarios** - Don't just test the happy path
+
+
+## Success Criteria
+
+Your project succeeds when:
+- ✅ All 11 services deployed across 2 application instances
+- ✅ Nginx load balancer distributing traffic effectively
+- ✅ Application accessible and fully functional
+- ✅ Scaling demonstrated with performance improvements
+- ✅ Failure scenarios handled gracefully
+- ✅ Architecture well-documented and justified
+
+## Resources
+
+### Docker Images (Pre-built)
+```
+us-central1-docker.pkg.dev/google-samples/microservices-demo/[service-name]:v0.10.2
+```
+
+### Dockerfiles
+Each service has a Dockerfile in `src/[service-name]/Dockerfile`
+
+### Service Communication
+- **gRPC** for inter-service communication
+- **HTTP/REST** for frontend
+- **Redis** for cart data storage
+
+**Ready to build a scalable, distributed microservices application? Let's go!** 🚀
